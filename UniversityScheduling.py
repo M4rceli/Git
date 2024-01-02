@@ -9,6 +9,7 @@ class Professor:
     def get_name(self): return self._name
     def __str__(self): return self._name
         
+        # test
 class Room:
     def __init__(self, id, name, lab, building):
         self._id = id
