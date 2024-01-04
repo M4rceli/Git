@@ -1,6 +1,12 @@
 
 import random as rnd
 import pandas as pd
+import prettytable as prettytable
+
+POPULATION_SIZE = 9
+
+
+
 class Professor:
     def __init__(self, id, name):
         self._id = id
@@ -28,10 +34,29 @@ class MeetingTime:
     def get_id(self): return self._id
     def get_time(self): return self._time
 
+class Course:
+    def __init__(self, id, name, professors, course_type, duration):
+        self._id = id
+        self._name = name
+        self._professors = professors
+        self._course_type = course_type
+        self._duration = duration
+    def get_id(self): return self._id
+    def get_name(self): return self._name
+    def get_professors(self): return self._professors 
+    def get_course_type(self): return self._course_type
+    def get_duration(self): return self._duration
 
+class Students:
+    def __init__(self, id, courses):
+        self._id = id
+        self._courses = courses
+    def get_id(self): return self._id
+    def get_courses(self): return self._courses
+  
 class Data:
     ROOMS = [["R1", "F1", "0", "B14"], ["R2", "F2", "0", "B15"], ["R3", "F3", "0", "B15"], ["R7", "Lab1", "1", "B15"]]
-    MEETING_TIMES = [["MON_01", "8:00-9:00"], ["MON_02", "9:00-10:00"], ["MON_03", "10:00-11:00"], ["TUE_01", "8:00-9:00"], ["TUE_02", "9:00-10:00"], ["TUE_03", "10:00-11:00"]]
+    MEETING_TIMES = [["MON_01", "8:00-10:00"], ["MON_02", "10:00-12:00"], ["MON_03", "12:00-14:00"], ["TUE_01", "8:00-10:00"], ["TUE_02", "10:00-12:00"], ["TUE_03", "12:00-14:00"]]
     PROFESSORS = [["P01", "Wojciech Kryszewski"],
                 ["P02", "Agnieszka Drwalewska"],
                 ["P03", "Włodzimierz Fechner"],
@@ -75,6 +100,7 @@ class Data:
     def get_meetingTimes(self): return self._meetingTimes
     def get_numberOfClasses(self): return self._numberOfClasses
 
+
 # Tworzenie instancji klasy Data
 
 data = Data()
@@ -111,24 +137,27 @@ class Schedule:
     def initialize(self):
         students = self._data.get_students()
         for i in range(0, len(students)):
-            courses = students[i].get_courses()
-            for j in range(0, len(courses)):
-                newClass = Class(self._classNumb, students[i], courses[j])
+            course = students[i].get_courses()
+            for j in range(0, len(course)):
+                newClass = Class(self._classNumb, students[i], course[j])
                 self._classNumb += 1
                 newClass.set_meetingTime(data.get_meetingTimes()[rnd.randrange(0, len(data.get_meetingTimes()))])
                 newClass.set_room(data.get_rooms()[rnd.randrange(0, len(data.get_rooms()))])
-                newClass.set_professor(courses[j].get_professors()[rnd.randrange(0, len(courses[j].get_professors()))])
+                newClass.set_professor(course[j].get_professors()[rnd.randrange(0, len(course[j].get_professors()))])
                 self._classes.append(newClass)
         return self
     def calculate_fitness(self):
         self._numbOfConflicts = 0
         classes = self.get_classes()
-        for j in range(0, len(classes)):
-            if (j >= i):
-                if (classes[i].get_meetingTime() == classes[j].get_meetingTime() and
-                classes[i].get_id() != classes[j].get_id()):
-                    if (classes[i].get_room() == classes[j].get_room()): self._numbOfConflicts += 1
-                    if (classes[i].get_instructor() == classes[j].get_instructor()): self._numbOfConflicts += 1
+        for i in range(0, len(classes)):
+            '''if (classes[i].get_room().get_seatingCapacity() < classes[i].get_course().get_maxNumbOfStudents()):
+                self._numbOfConflicts += 1'''
+            for j in range(0, len(classes)):
+                if (j >= i):
+                    if (classes[i].get_meetingTime() == classes[j].get_meetingTime() and
+                    classes[i].get_id() != classes[j].get_id()):
+                        if (classes[i].get_room() == classes[j].get_room()): self._numbOfConflicts += 1
+                        if (classes[i].get_professor() == classes[j].get_professor()): self._numbOfConflicts += 1
         return 1 / ((1.0*self._numbOfConflicts + 1))
     def __str__(self):
         returnValue = ""
@@ -137,7 +166,13 @@ class Schedule:
         returnValue += str(self._classes[len(self._classes)-1])
         return returnValue
 
-
+class Population:
+    def __init__(self, size):
+        self._size = size
+        self._data = data
+        self._schedules = []
+        for i in range(0, size): self._schedules.append(Schedule().initialize())
+    def get_schedules(self): return self._schedules
 class Department:
     def __init__(self, id, name):
         self._id = id
@@ -145,13 +180,6 @@ class Department:
     def get_id(self): return self._id    
     def get_name(self): return self._name
 
-class Students:
-    def __init__(self, id, courses):
-        self._id = id
-        self._courses = courses
-    def get_id(self): return self._id
-    def get_courses(self): return self._courses
-    
 class Subject:
     def __init__(self, id, name):
         self._id = id
@@ -159,31 +187,18 @@ class Subject:
     def get_id(self): return self._id
     def get_name(self): return self._name
     
-class Course:
-    def __init__(self, id, name, professor, course_type, duration):
-        self._id = id
-        self._name = name
-        self._professor = professor
-        self._course_type = course_type
-        self._duration = duration
-    def get_id(self): return self._id
-    def get_name(self): return self._name
-    def get_professor(self): return self._professor 
-    def get_course_type(self): return self._course_type
-    def get_duration(self): return self._duration
-  
 # Students za department
 class Class:
-    def __init__(self, id, department, students, course):
+    def __init__(self, id,  students, course):
         self._id = id
-        self._department = department
+        #self._department = department
         self._students = students
         self._course = course
         self._professor = None
         self._meetingTime = None
         self._room = None
     def get_id(self): return self._id
-    def get_department(self): return self._department
+    #def get_department(self): return self._department
     def get_students(self): return self._students
     def get_course(self): return self._course
     def get_professor(self): return self._professor
@@ -193,62 +208,39 @@ class Class:
     def set_meetingTime(self, meetingTime): self._meetingTime = meetingTime
     def set_room(self, room): self._room = room
     def __str__(self): 
-        return str(self._department.get_name()) + "," + str(self._students.get_name())+ "," + str(self._course.get_id()) + "," + \
-               str(self._room.get_id()) + "," + str(self._instructor.get_id()) + "," + str(self._meetingTime.get_id())
+        return str(self._students.get_id())+ "," + str(self._course.get_id()) + "," + \
+               str(self._room.get_id()) + "," + str(self._professor.get_id()) + "," + str(self._meetingTime.get_id())
     
-
-
-
-
 class DisplayMgr:
     def print_available_data(self):
         print("> All Available Data")
-        self.print_department()
-        self.print_course()
-        self.print_room()
-        self.print_professor()
-        self.print_meeting_times()
-
-    def print_department(self):
-        departments = data.get_departments()
-        department_list = []
-        for i in range(0, len(departments)):
-            courses = departments.__getitem__(i).get_courses()
-            tempStr = "["
-            for j in range(0, len(courses) - 1):
-                tempStr += courses[j].__str__() + ", "
-            tempStr += courses[len(courses) - 1].__str__() + "]"
-            department_list.append([departments.__getitem__(i).get_name(), tempStr])
-        
-        # Przekształcanie listy departamentów w ramkę danych i wyświetlanie jej
-        departments_df = pd.DataFrame(department_list, columns=['Department', 'Courses'])
-        print(departments_df)
-
-
-'''
-## tabele: Professor, Room, Department, Students, Students_group, Subject, Course, Course_Professor, MeetingTime    
-import pandas as pd
-
-# Tworzymy puste bloki czasowe
-bloki_czasowe = [f"{godzina}:00-{godzina+1}:00" for godzina in range(8, 20)]
-
-# Tworzymy ramkę danych z indeksem ustawionym na nasze bloki czasowe
-plan_zajec = pd.DataFrame(index=bloki_czasowe)
-
-# Dodajemy kolumny dla każdego dnia tygodnia
-dni_tygodnia = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek"]
-for dzien in dni_tygodnia:
-    plan_zajec[dzien] = ""  # Na początku wszystkie bloki są puste
-
-# Wyświetlamy nasz plan zajęć
-print(plan_zajec)
-
-# Dodajemy kilka zajęć do naszego planu
-plan_zajec.loc["9:00-10:00", "Poniedziałek"] = "Matematyka"
-plan_zajec.loc["10:00-11:00", "Wtorek"] = "Fizyka"
-plan_zajec.loc["11:00-12:00", "Środa"] = "Chemia"
-plan_zajec.loc["12:00-13:00", "Czwartek"] = "Informatyka"
-plan_zajec.loc["13:00-14:00", "Piątek"] = "Biologia"
-
-print(plan_zajec)
-'''
+        #self.print_department()
+        #self.print_course()
+        #self.print_room()
+        #self.print_professor()
+        #self.print_meeting_times()
+    def print_generation(self, population):
+        table1 = prettytable.PrettyTable(['schedule #', 'fitness', '# of conflicts', 'classes [students, course, room, professor, meeting-time]'])
+        schedules = population.get_schedules()
+        for i in range(0, len(schedules)):
+            table1.add_row([str(i), round(schedules[i].get_fitness(),3), schedules[i].get_numbOfConflicts(), schedules[i].__str__()])
+        print(table1)
+    def print_schedule_as_table(self, schedule):
+        classes = schedule.get_classes()
+        classes.sort(key=lambda x: x.get_meetingTime().get_id())
+        table = prettytable.PrettyTable(['Class #',  'Room', 'Professor (Id)',  'Meeting Time (Id)'])
+        for i in range(0, len(classes)):
+            table.add_row([str(i), 
+                           classes[i].get_room().get_id(),
+                           classes[i].get_professor().get_name() +" (" + str(classes[i].get_professor().get_id()) +")",
+                           classes[i].get_meetingTime().get_time() +" (" + str(classes[i].get_meetingTime().get_id()) +")"])
+        print(table)
+data = Data()
+displayMgr = DisplayMgr()
+displayMgr.print_available_data()
+generationNumber = 0
+print("\n> Generation # "+str(generationNumber))
+population = Population(POPULATION_SIZE)
+population.get_schedules().sort(key=lambda x: x.get_fitness(), reverse=True)
+displayMgr.print_generation(population)
+displayMgr.print_schedule_as_table(population.get_schedules()[0])
