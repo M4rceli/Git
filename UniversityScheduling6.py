@@ -120,11 +120,12 @@ Class Course
 
 class Course:
     
-    def __init__(self, id, name, professors, course_type,duration):
+    def __init__(self, id, name, professors, course_type,Numgrstudents,duration):
         self._id = id
         self._name = name
         self._professors = professors
         self._course_type = course_type
+        self._Numgrstudents=Numgrstudents
         self._duration = duration
     
     def get_id(self): 
@@ -152,11 +153,12 @@ class Course:
         if isinstance(other, Course):
             return (self._id == other._id and self._name == other._name and 
                     self._professors == other._professors and self._course_type == other._course_type and
+                    self._Numgrstudents==other._Numgrstudents and
                     self._duration == other._duration)
         return False
 
     def __hash__(self):
-        return hash((self._id, self._name, tuple(self._professors), self._course_type,self._duration))
+        return hash((self._id, self._name, tuple(self._professors), self._course_type,self._Numgrstudents,self._duration))
     
     
     """ 
@@ -234,12 +236,12 @@ class Subject:
 """" 
 Data Migration
 """
-#Selekcja danych przy uzyciu pilku z danymi
+#Selekcja danych przy uzyciu pilku(SQL) z danymi
 class DataMigration:
     
     def __init__(self):
     
-        self._conn = sqlite.connect('University2.db')
+        self._conn = sqlite.connect('University13.db')
         self._c = self._conn.cursor()  # metoda połączenia klasy 
         self._rooms = self.select_rooms()
         self._meetingTimes = self.select_meeting_times()
@@ -291,7 +293,7 @@ class DataMigration:
         courses = self._c.fetchall()
         returnCourses = []
         for i in range(0, len(courses)):
-            returnCourses.append(Course(courses[i][0], courses[i][1], self.select_course_professors(courses[i][0]), courses[i][3], courses[i][4]))
+            returnCourses.append(Course(courses[i][0], courses[i][1], self.select_course_professors(courses[i][0]), courses[i][3], courses[i][4],courses[i][5]))
         return returnCourses
     
     def select_students(self):
@@ -564,7 +566,7 @@ class Population:
         return self._schedules
 
 
-
+#Wprowadzenie klasy algortymu genetycznego
 """
 Class GeneticAlgorithm 
 """
@@ -676,6 +678,7 @@ class DisplayMgr:
             table4.add_row([
                 i,
                 f"{cls.get_course().get_name()} ({cls.get_course().get_id()})",
+                
                 f"{cls.get_room().get_name()} ({cls.get_room().get_id()})",
                 f"{cls.get_professor().get_name()} ({cls.get_professor().get_id()})",
                 f"{cls.get_meetingTime().get_time()} ({cls.get_meetingTime().get_id()})"
@@ -691,7 +694,7 @@ class DisplayMgr:
 
         
         table = PrettyTable()
-        table.field_names = ["Class #", "Course (Id)", "Room (Id)", "Professor", "Meeting Time","Capacity"]
+        table.field_names = ["Class #", "Course (Id)", "Room (Id)", "Professor", "Meeting Time","Capacity","Max Number of Students"]
 
     
         for i, cls in enumerate(student_classes):
@@ -701,14 +704,17 @@ class DisplayMgr:
                 f"{cls.get_room().get_name()} ({cls.get_room().get_id()})",
                 f"{cls.get_professor().get_name()} ({cls.get_professor().get_id()})",
                 f"{cls.get_meetingTime().get_time()} ({cls.get_meetingTime().get_id()})",
-                f"{cls.get_room().get_Capacity()}"])
-            #table.add_column("Maxnumber of Students",[20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,1020,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10,20,10])
+                f"{cls.get_room().get_Capacity()}",
+                f"{cls.get_course().get_Numgrstudents()}"])
+            
     
         print(f"\n> Schedule for student {student_id}")
         print(table)
 
         y=table.get_string(fields=["Room (Id)","Capacity"])
         print(y)
+        z=table.get_string(fields=["Course (Id)","Max Number of Students"])
+        print(z)
     
     def print_timetable_grid(self, schedule):
         days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
