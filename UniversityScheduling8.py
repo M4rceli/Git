@@ -499,12 +499,14 @@ class Schedule:
         self._conflictingClasses = []  
         classes = self.get_classes()
         for i in range(0, len(classes)):
+            if(classes[i].get_room().get_Capacity() < classes[i].get_course().get_Numgrstudents()):
+                self._numbOfConflicts += 1
             for j in range(0, len(classes)):
                 if (j >= i):
                     
                        if (classes[i].get_meetingTime() == classes[j].get_meetingTime() and classes[i].get_course().get_id() != classes[j].get_course().get_id()):
                         
-                        if (classes[i].get_room() == classes[j].get_room() and classes[i].get_room().get_Capacity()< classes[i].get_course().get_Numgrstudents() and classes[j].get_room().get_Capacity()< classes[j].get_course().get_Numgrstudents()):
+                        if (classes[i].get_room() == classes[j].get_room() and classes[i].get_room().get_Capacity() < classes[i].get_course().get_Numgrstudents() and classes[j].get_room().get_Capacity() < classes[j].get_course().get_Numgrstudents()):
                             self._numbOfConflicts += 1
                             self._conflictingClasses.append((classes[i], classes[j], "Room conflict"))   
                         
@@ -574,9 +576,9 @@ Class GeneticAlgorithm
 
 POPULATION_SIZE = 10
 NUMB_OF_ELITE_SCHEDULES = 1
-TOURNAMENT_SELECTION_SIZE = 3
-MUTATION_RATE = 0.1
-CROSSOVER_PROBABILITY = 0.75
+TOURNAMENT_SELECTION_SIZE = 2
+MUTATION_RATE = 0.3
+CROSSOVER_PROBABILITY = 0.8
 
 class GeneticAlgorithm:
     
@@ -590,7 +592,7 @@ class GeneticAlgorithm:
         #print("Evolution started") 
         return self._mutate_population(self._crossover_population(population))
     
-
+    
     def _crossover_population(self, pop):
        # print("Crossover started")
         crossover_pop = Population(0)
@@ -605,8 +607,8 @@ class GeneticAlgorithm:
             i += 1
             #print("Crossover started")
         return crossover_pop
-        
 
+    
     def _mutate_population(self, population):
         #print("Mutation started")
         for i in range(NUMB_OF_ELITE_SCHEDULES, POPULATION_SIZE):
@@ -851,7 +853,7 @@ while (population.get_schedules()[0].get_fitness() != 1.0):
     if generationNumber % 100 == 0:
         print("\n> Generation # " + str(generationNumber))
         displayMgr.print_generation(population)
-        #displayMgr.print_schedule_as_table(population.get_schedules()[0])
+        displayMgr.print_schedule_as_table(population.get_schedules()[0])
         #displayMgr.print_schedule_by_professor(population.get_schedules()[0])
         #displayMgr.print_schedule_by_room(population.get_schedules()[0])
         for student in students:
